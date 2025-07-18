@@ -15,7 +15,7 @@ class AppFixtures extends Fixture
             ->setContent('This is the content of the sample article.')
             ->setCreatedAt(new \DateTimeImmutable())
             ->setUpdatedAt(new \DateTimeImmutable());
-         $manager->persist($article);
+        $manager->persist($article);
 
         $manager->flush();
     }

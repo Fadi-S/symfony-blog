@@ -2,11 +2,18 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\ArticleRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: ArticleRepository::class)]
+#[ApiResource(
+    normalizationContext: ['groups' => ['article:read']],
+    denormalizationContext: ['groups' => ['article:write']]
+)]
 class Article
 {
     #[ORM\Id]
@@ -21,21 +28,29 @@ class Article
     private ?string $content = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $created_at = null;
+    #[Gedmo\Timestampable]
+    private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $updated_at = null;
+    #[Gedmo\Timestampable]
+    private ?\DateTimeImmutable $updatedAt = null;
+
+    #[ORM\ManyToOne(inversedBy: 'articles')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $publisher = null;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
+    #[Groups(['article:read'])]
     public function getTitle(): ?string
     {
         return $this->title;
     }
 
+    #[Groups(['article:write'])]
     public function setTitle(string $title): static
     {
         $this->title = $title;
@@ -43,11 +58,13 @@ class Article
         return $this;
     }
 
+    #[Groups(['article:read'])]
     public function getContent(): ?string
     {
         return $this->content;
     }
 
+    #[Groups(['article:write'])]
     public function setContent(string $content): static
     {
         $this->content = $content;
@@ -55,26 +72,27 @@ class Article
         return $this;
     }
 
+    #[Groups(['article:read'])]
     public function getCreatedAt(): ?\DateTimeImmutable
     {
-        return $this->created_at;
+        return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $created_at): static
-    {
-        $this->created_at = $created_at;
-
-        return $this;
-    }
-
+    #[Groups(['article:read'])]
     public function getUpdatedAt(): ?\DateTimeImmutable
     {
-        return $this->updated_at;
+        return $this->updatedAt;
     }
 
-    public function setUpdatedAt(\DateTimeImmutable $updated_at): static
+    #[Groups(['article:read'])]
+    public function getPublisher(): ?User
     {
-        $this->updated_at = $updated_at;
+        return $this->publisher;
+    }
+
+    public function setPublished(?User $publisher): static
+    {
+        $this->publisher = $publisher;
 
         return $this;
     }
