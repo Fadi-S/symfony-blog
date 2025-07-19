@@ -154,7 +154,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if (!$this->articles->contains($article)) {
             $this->articles->add($article);
-            $article->setPublished($this);
+            $article->setPublisher($this);
         }
 
         return $this;
