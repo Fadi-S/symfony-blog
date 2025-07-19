@@ -179,13 +179,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->updatedAt = new \DateTimeImmutable();
     }
 
-    //    /**
-    //     * @return Collection<int, Article>
-    //     */
-    //    public function getArticles(): Collection
-    //    {
-    //        return $this->articles;
-    //    }
+    /**
+     * @return Collection<int, Article>
+     */
+    public function getArticles(): Collection
+    {
+        return $this->articles;
+    }
 
     public function addArticle(Article $article): static
     {

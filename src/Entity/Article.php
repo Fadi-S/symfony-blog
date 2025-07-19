@@ -11,6 +11,7 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use App\Repository\ArticleRepository;
 use App\State\ArticleStateProcessor;
+use App\State\MyArticlesStateProvider;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -21,6 +22,12 @@ use Symfony\Component\Serializer\Attribute\Groups;
     denormalizationContext: ['groups' => ['article:write']],
 )]
 #[Get]
+#[GetCollection(
+    uriTemplate: '/my-articles',
+    description: 'Get all articles by the authenticated user',
+    security: "is_granted('ROLE_USER')",
+    provider: MyArticlesStateProvider::class,
+)]
 #[Put(
     security: "is_granted('ROLE_USER') and object.isBy(user)",
     processor: ArticleStateProcessor::class,
