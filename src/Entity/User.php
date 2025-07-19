@@ -5,11 +5,12 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Mapping\Annotation as Gedmo;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -21,12 +22,20 @@ use Symfony\Component\Validator\Constraints as Assert;
     operations: [
         new Get(
             normalizationContext: ['groups' => ['user:read']],
-
+        ),
+        new Post(
+            uriTemplate: '/auth/register',
+            shortName: 'Login Check',
+            description: 'Register a new user',
+            denormalizationContext: ['groups' => ['user:write']],
         ),
     ],
     normalizationContext: ['groups' => ['user:read']],
     denormalizationContext: ['groups' => ['user:write']]
 )]
+#[UniqueEntity(fields: ['username'], message: 'This username is already taken.')]
+#[UniqueEntity(fields: ['email'], message: 'This email is already registered.')]
+#[ORM\HasLifecycleCallbacks]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -36,23 +45,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user:read'])]
-    #[Assert\NotBlank]
+    #[Groups(['user:read', 'user:write'])]
+    #[Assert\Length(min: 2, max: 255)]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'user:write'])]
     #[ApiProperty(identifier: true)]
-    #[Assert\NotBlank]
-    #[Assert\Unique]
+    #[Assert\Length(min: 2, max: 255)]
     private ?string $username = null;
 
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['user:read'])]
-    #[Assert\Unique]
+    #[Groups(['user:read', 'user:write'])]
+    #[Assert\Length(min: 3, max: 255)]
+    #[Assert\Email]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user:write'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 6, max: 128)]
+    #[Assert\PasswordStrength(
+        message: 'Your password must be at least 6 characters long and contain a mix of letters, numbers, and special characters.'
+    )]
     private ?string $password = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -60,11 +75,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $image = null;
 
     #[ORM\Column]
-    #[Gedmo\Timestampable]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column]
-    #[Gedmo\Timestampable]
     private ?\DateTimeImmutable $updatedAt = null;
 
     /**
@@ -154,6 +167,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getUpdatedAt(): ?\DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    #[ORM\PrePersist]
+    #[ORM\PreUpdate]
+    public function setDateAtValue(): void
+    {
+        if (null === $this->createdAt) {
+            $this->createdAt = new \DateTimeImmutable();
+        }
+        $this->updatedAt = new \DateTimeImmutable();
     }
 
     //    /**
